@@ -21,10 +21,8 @@ namespace AniLyst_5._0.CustomControls
             scrollViewer.MouseMove += OnMouseMove;
             slider.ValueChanged += OnSliderValueChanged;
         }
-
-        //  private UIElement _Child { get; set; }
-
-        public object Child { get { return CP.Content; } set { CP.Content = value; } }
+        
+        new public object Content { get { return CP.Content; } set { CP.Content = value; } }
 
         #region Zoom
 
