@@ -10,26 +10,82 @@ namespace AniLyst_5._0.CustomControls
     public partial class ZoomBox : UserControl
     {
         // Taken / Based on the control described on " https://www.codeproject.com/Articles/97871/WPF-simple-zoom-and-drag-support-in-a-ScrollViewer "
-        public ZoomBox()
-        {
-            InitializeComponent();
-            scrollViewer.ScrollChanged += OnScrollViewerScrollChanged;
-            scrollViewer.MouseLeftButtonUp += OnMouseLeftButtonUp;
-            scrollViewer.PreviewMouseLeftButtonUp += OnMouseLeftButtonUp;
-            scrollViewer.PreviewMouseWheel += OnPreviewMouseWheel;
-            scrollViewer.PreviewMouseLeftButtonDown += OnMouseLeftButtonDown;
-            scrollViewer.MouseMove += OnMouseMove;
-            slider.ValueChanged += OnSliderValueChanged;
-        }
-        
-        new public object Content { get { return CP.Content; } set { CP.Content = value; } }
-
-        #region Zoom
-
         private Point? lastCenterPositionOnTarget;
 
         private Point? lastMousePositionOnTarget;
         private Point? lastDragPoint;
+
+        public ZoomBox()
+        {
+            InitializeComponent();
+            //scrollViewer.MouseLeftButtonUp += OnMouseLeftButtonUp;
+            //scrollViewer.PreviewMouseLeftButtonUp += OnMouseLeftButtonUp;
+            //scrollViewer.PreviewMouseLeftButtonDown += OnMouseLeftButtonDown;
+            scrollViewer.MouseUp += ScrollViewer_MouseUp;
+            scrollViewer.PreviewMouseUp += ScrollViewer_PreviewMouseUp;
+            scrollViewer.PreviewMouseDown += ScrollViewer_PreviewMouseDown;
+            //scrollViewer.MouseRightButtonUp += OnMouseLeftButtonUp;
+            //scrollViewer.PreviewMouseRightButtonUp += OnMouseLeftButtonUp;
+            //scrollViewer.PreviewMouseRightButtonDown += OnMouseLeftButtonDown;
+
+            scrollViewer.ScrollChanged += OnScrollViewerScrollChanged;
+            scrollViewer.PreviewMouseWheel += OnPreviewMouseWheel;
+            scrollViewer.MouseMove += OnMouseMove;
+            slider.ValueChanged += OnSliderValueChanged;
+        }
+
+        new public object Content { get { return CP.Content; } set { CP.Content = value; } }
+
+        #region Drag Button
+
+        private DragButton _DragButton = DragButton.Right;
+
+        public DragButton DragButton { get { return _DragButton; } set { _DragButton = value; } }
+
+        private void ScrollViewer_MouseUp(object sender, MouseButtonEventArgs e) => DragButtonManager(true, MouseButtonState.Released, sender, e);
+
+        private void ScrollViewer_PreviewMouseUp(object sender, MouseButtonEventArgs e) => DragButtonManager(true, MouseButtonState.Released, sender, e);
+
+        private void ScrollViewer_PreviewMouseDown(object sender, MouseButtonEventArgs e) => DragButtonManager(false, MouseButtonState.Pressed, sender, e);
+
+        private void DragButtonManager(bool ButtonUp, MouseButtonState StatePass, object sender, MouseButtonEventArgs e)
+        {
+            bool Pass = false;
+
+            switch (_DragButton)
+            {
+                case DragButton.Left: if (e.LeftButton == StatePass) Pass = true; break;
+                case DragButton.Middle: if (e.MiddleButton == StatePass) Pass = true; break;
+                case DragButton.Right: if (e.RightButton == StatePass) Pass = true; break;
+            }
+
+            if (Pass)
+            {
+                if (ButtonUp) OnMouseButtonUp(sender, e);
+                else OnMouseButtonDown(sender, e);
+            }
+        }
+
+        private void OnMouseButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            scrollViewer.Cursor = Cursors.Arrow;
+            scrollViewer.ReleaseMouseCapture();
+            lastDragPoint = null;
+        }
+
+        private void OnMouseButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var mousePos = e.GetPosition(scrollViewer);
+            if (mousePos.X <= scrollViewer.ViewportWidth && mousePos.Y <
+                scrollViewer.ViewportHeight) //make sure we still can use the scrollbars
+            {
+                scrollViewer.Cursor = Cursors.SizeAll;
+                lastDragPoint = mousePos;
+                Mouse.Capture(scrollViewer);
+            }
+        }
+
+        #endregion Drag Button
 
         private void OnMouseMove(object sender, MouseEventArgs e)
         {
@@ -47,18 +103,6 @@ namespace AniLyst_5._0.CustomControls
             }
         }
 
-        private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            var mousePos = e.GetPosition(scrollViewer);
-            if (mousePos.X <= scrollViewer.ViewportWidth && mousePos.Y <
-                scrollViewer.ViewportHeight) //make sure we still can use the scrollbars
-            {
-                scrollViewer.Cursor = Cursors.SizeAll;
-                lastDragPoint = mousePos;
-                Mouse.Capture(scrollViewer);
-            }
-        }
-
         private void OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
             lastMousePositionOnTarget = Mouse.GetPosition(grid);
@@ -73,13 +117,6 @@ namespace AniLyst_5._0.CustomControls
             }
 
             e.Handled = true;
-        }
-
-        private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            scrollViewer.Cursor = Cursors.Arrow;
-            scrollViewer.ReleaseMouseCapture();
-            lastDragPoint = null;
         }
 
         private void OnSliderValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -143,7 +180,7 @@ namespace AniLyst_5._0.CustomControls
                 }
             }
         }
-
-        #endregion Zoom
     }
+
+    public enum DragButton { Left, Middle, Right }
 }
