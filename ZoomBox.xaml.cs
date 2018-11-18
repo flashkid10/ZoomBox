@@ -18,27 +18,32 @@ namespace AniLyst_5._0.CustomControls
         public ZoomBox()
         {
             InitializeComponent();
-            //scrollViewer.MouseLeftButtonUp += OnMouseLeftButtonUp;
-            //scrollViewer.PreviewMouseLeftButtonUp += OnMouseLeftButtonUp;
-            //scrollViewer.PreviewMouseLeftButtonDown += OnMouseLeftButtonDown;
             scrollViewer.MouseUp += ScrollViewer_MouseUp;
             scrollViewer.PreviewMouseUp += ScrollViewer_PreviewMouseUp;
             scrollViewer.PreviewMouseDown += ScrollViewer_PreviewMouseDown;
-            //scrollViewer.MouseRightButtonUp += OnMouseLeftButtonUp;
-            //scrollViewer.PreviewMouseRightButtonUp += OnMouseLeftButtonUp;
-            //scrollViewer.PreviewMouseRightButtonDown += OnMouseLeftButtonDown;
-
             scrollViewer.ScrollChanged += OnScrollViewerScrollChanged;
             scrollViewer.PreviewMouseWheel += OnPreviewMouseWheel;
             scrollViewer.MouseMove += OnMouseMove;
             slider.ValueChanged += OnSliderValueChanged;
+            slider.ValueChanged += Slider_ValueChanged;
+            SliderGridVis(false);
         }
 
         new public object Content { get { return CP.Content; } set { CP.Content = value; } }
 
+        #region Slider Grid Visibility
+
+        private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => SliderGrid.VisibilityCol(slider.Value != 1);
+
+        private void SliderGridVis(bool SG) => SliderGrid.VisibilityCol(SG);
+
+        public double Maximum { get { return slider.Maximum; } set { slider.Maximum = value; } }
+
+        #endregion Slider Grid Visibility
+
         #region Drag Button
 
-        private DragButton _DragButton = DragButton.Right;
+        private DragButton _DragButton = DragButton.Middle;
 
         public DragButton DragButton { get { return _DragButton; } set { _DragButton = value; } }
 
@@ -92,12 +97,9 @@ namespace AniLyst_5._0.CustomControls
             if (lastDragPoint.HasValue)
             {
                 Point posNow = e.GetPosition(scrollViewer);
-
                 double dX = posNow.X - lastDragPoint.Value.X;
                 double dY = posNow.Y - lastDragPoint.Value.Y;
-
                 lastDragPoint = posNow;
-
                 scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - dX);
                 scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - dY);
             }
@@ -106,16 +108,8 @@ namespace AniLyst_5._0.CustomControls
         private void OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
             lastMousePositionOnTarget = Mouse.GetPosition(grid);
-
-            if (e.Delta > 0)
-            {
-                slider.Value += 1;
-            }
-            if (e.Delta < 0)
-            {
-                slider.Value -= 1;
-            }
-
+            if (e.Delta > 0) slider.Value += 1;
+            if (e.Delta < 0) slider.Value -= 1;
             e.Handled = true;
         }
 
@@ -123,9 +117,7 @@ namespace AniLyst_5._0.CustomControls
         {
             scaleTransform.ScaleX = e.NewValue;
             scaleTransform.ScaleY = e.NewValue;
-
-            var centerOfViewport = new Point(scrollViewer.ViewportWidth / 2,
-                                             scrollViewer.ViewportHeight / 2);
+            var centerOfViewport = new Point(scrollViewer.ViewportWidth / 2, scrollViewer.ViewportHeight / 2);
             lastCenterPositionOnTarget = scrollViewer.TranslatePoint(centerOfViewport, grid);
         }
 
@@ -140,11 +132,8 @@ namespace AniLyst_5._0.CustomControls
                 {
                     if (lastCenterPositionOnTarget.HasValue)
                     {
-                        var centerOfViewport = new Point(scrollViewer.ViewportWidth / 2,
-                                                         scrollViewer.ViewportHeight / 2);
-                        Point centerOfTargetNow =
-                              scrollViewer.TranslatePoint(centerOfViewport, grid);
-
+                        var centerOfViewport = new Point(scrollViewer.ViewportWidth / 2, scrollViewer.ViewportHeight / 2);
+                        Point centerOfTargetNow = scrollViewer.TranslatePoint(centerOfViewport, grid);
                         targetBefore = lastCenterPositionOnTarget;
                         targetNow = centerOfTargetNow;
                     }
@@ -153,7 +142,6 @@ namespace AniLyst_5._0.CustomControls
                 {
                     targetBefore = lastMousePositionOnTarget;
                     targetNow = Mouse.GetPosition(grid);
-
                     lastMousePositionOnTarget = null;
                 }
 
@@ -161,20 +149,11 @@ namespace AniLyst_5._0.CustomControls
                 {
                     double dXInTargetPixels = targetNow.Value.X - targetBefore.Value.X;
                     double dYInTargetPixels = targetNow.Value.Y - targetBefore.Value.Y;
-
                     double multiplicatorX = e.ExtentWidth / grid.Width;
                     double multiplicatorY = e.ExtentHeight / grid.Height;
-
-                    double newOffsetX = scrollViewer.HorizontalOffset -
-                                        dXInTargetPixels * multiplicatorX;
-                    double newOffsetY = scrollViewer.VerticalOffset -
-                                        dYInTargetPixels * multiplicatorY;
-
-                    if (double.IsNaN(newOffsetX) || double.IsNaN(newOffsetY))
-                    {
-                        return;
-                    }
-
+                    double newOffsetX = scrollViewer.HorizontalOffset - dXInTargetPixels * multiplicatorX;
+                    double newOffsetY = scrollViewer.VerticalOffset - dYInTargetPixels * multiplicatorY;
+                    if (double.IsNaN(newOffsetX) || double.IsNaN(newOffsetY)) return;
                     scrollViewer.ScrollToHorizontalOffset(newOffsetX);
                     scrollViewer.ScrollToVerticalOffset(newOffsetY);
                 }
