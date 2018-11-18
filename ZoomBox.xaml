@@ -1,20 +1,23 @@
-﻿<UserControl x:Class="AniLyst_5._0.CustomControls.ZoomBox"
+<UserControl x:Class="AniLyst_5._0.CustomControls.ZoomBox"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:AniLyst_5._0.CustomControls"
              mc:Ignorable="d"
-             d:DesignHeight="300" d:DesignWidth="300">
-    <Grid x:Name="ZoomGrid">
+             d:DesignHeight="300" d:DesignWidth="300" IsHitTestVisible="True" BorderThickness="1" BorderBrush="Black" Background="White">
+    <Grid x:Name="ZoomGrid" IsHitTestVisible="True">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Slider Grid.Column="0" Orientation="Vertical" HorizontalAlignment="Left" Minimum="1" x:Name="slider" />
+        <Grid x:Name="SliderGrid" Grid.Column="0">
+            <Rectangle Fill="#FFF0F0F0" />
+            <Slider x:Name="slider" Orientation="Vertical" HorizontalAlignment="Left" Minimum="1" Margin="3" Maximum="15" />
+        </Grid>
 
-        <ScrollViewer Name="scrollViewer" Grid.Column="1" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible">
+        <ScrollViewer Name="scrollViewer" Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Margin="0">
             <Grid Name="grid" RenderTransformOrigin="0.5,0.5">
                 <Grid.LayoutTransform>
                     <TransformGroup>
@@ -22,7 +25,7 @@
                     </TransformGroup>
                 </Grid.LayoutTransform>
                 <Viewbox Grid.Column="0" Grid.Row="0">
-                    <ContentPresenter x:Name="CP" />
+                    <ContentPresenter x:Name="CP" Margin="3" />
                 </Viewbox>
             </Grid>
         </ScrollViewer>
